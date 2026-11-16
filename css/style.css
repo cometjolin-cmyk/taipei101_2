@@ -1,0 +1,563 @@
+/* ==========================================================================
+   Taipei 101 - Exact Reference UI Styling & Glassmorphic Superpowers
+   Aligned with reference screenshot:
+   - Top-Left: TAIPEI 101 / 台北 101 / 高度 508m / 樓層 101F / 阻尼器 660t
+   - Bottom: Live Caption Pill with [展開 / 收合] button
+   - 3D Floating Glowing Hotspot '+' Pins
+   - Expandable Advanced Control Dock
+   ========================================================================== */
+
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "SF Pro Display", sans-serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", monospace;
+
+  --accent-gold: #fbbf24;
+  --accent-cyan: #38bdf8;
+  --bg-dark-pill: rgba(15, 23, 42, 0.88);
+  --border-pill: rgba(255, 255, 255, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #5c6b66; /* Matching reference screenshot atmospheric fog */
+  font-family: var(--font-sans);
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#webgl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ==========================================================================
+   3D Floating Hotspot Pins Layer with Radar Pulse Rings & Leader Labels
+   ========================================================================== */
+
+#hotspots-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.hotspot-pin {
+  position: absolute;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  z-index: 6;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pin-core {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 2px solid #fef3c7;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 900;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.95), 0 4px 10px rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.hotspot-pin:hover .pin-core {
+  transform: scale(1.15);
+  background: #fbbf24;
+  box-shadow: 0 0 28px rgba(251, 191, 36, 1);
+}
+
+/* Concentric Radar Ring Waves */
+.pin-ring {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 158, 11, 0.8);
+  animation: radarWave 2s infinite cubic-bezier(0, 0.2, 0.8, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes radarWave {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; }
+}
+
+/* Leader Label Tag shown on Hover */
+.pin-label {
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  opacity: 0.88;
+  transform: translateX(0);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.hotspot-pin:hover .pin-label {
+  opacity: 1.0;
+  transform: translateX(4px);
+  border-color: #fbbf24;
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.35);
+}
+
+.pin-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fef08a;
+}
+
+.pin-desc {
+  font-size: 10px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   UI Layer Overlay
+   ========================================================================== */
+
+#ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 40px;
+}
+
+.interactive-panel {
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Top-Left Header (Exact Reference Match & Sci-Fi HUD Metrics)
+   ========================================================================== */
+
+.hero-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 10px #34d399;
+  animation: statusBlink 1.8s infinite ease-in-out;
+}
+
+@keyframes statusBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.hero-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.hero-main {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  line-height: 1.1;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+}
+
+.metrics-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-label {
+  font-size: 10px;
+  color: #94a3b8;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.metric-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: #38bdf8;
+  margin-left: 2px;
+}
+
+/* Top-Right Quick Utility Buttons */
+.top-bar-right {
+  position: absolute;
+  top: 32px;
+  right: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.util-btn {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.util-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.util-btn.active {
+  border-color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.2);
+  color: var(--accent-cyan);
+}
+
+/* ==========================================================================
+   Bottom Reference Caption Bar (Exact Match with [展開] button)
+   ========================================================================== */
+
+.bottom-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 14px;
+}
+
+.reference-caption-bar {
+  pointer-events: auto;
+  background: rgba(10, 18, 35, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 12px 20px;
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.caption-message {
+  font-size: 14px;
+  color: #f1f5f9;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.btn-expand-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-expand-toggle:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ==========================================================================
+   Expandable Modular Floating Control Dock
+   ========================================================================== */
+
+.control-dock-wrap {
+  width: 100%;
+  max-width: 1100px;
+  display: none; /* Collapsed by default, expands when clicking [展開] */
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.control-dock-wrap.expanded {
+  display: flex;
+}
+
+.control-dock {
+  width: 100%;
+  background: rgba(10, 18, 35, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  border-radius: 18px;
+  padding: 14px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.dock-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dock-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.time-readout {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+.button-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.dock-btn {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dock-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dock-btn.active {
+  background: var(--accent-cyan);
+  color: #030712;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+}
+
+/* Action Buttons (Elevator, Damper, Fireworks) */
+.action-btn {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.4), rgba(139, 92, 246, 0.4));
+  border-color: rgba(56, 189, 248, 0.7);
+  transform: translateY(-2px);
+}
+
+.action-btn.active {
+  background: linear-gradient(135deg, var(--accent-cyan), #8b5cf6);
+  color: #030712;
+}
+
+/* Time Slider */
+.time-slider-wrap {
+  display: flex;
+  align-items: center;
+  width: 140px;
+}
+
+.time-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #0f172a 0%, #f59e0b 25%, #38bdf8 50%, #f97316 75%, #0f172a 100%);
+  outline: none;
+  cursor: pointer;
+}
+
+.time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--accent-cyan);
+  cursor: pointer;
+}
+
+/* Weekday Light Color Dot Buttons */
+.weekday-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.color-dot-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-dot-btn:hover {
+  transform: scale(1.2);
+}
+
+.color-dot-btn.active {
+  border-color: #ffffff;
+  transform: scale(1.25);
+  box-shadow: 0 0 10px currentColor;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 960px) {
+  #ui-layer {
+    padding: 16px 20px;
+  }
+  .hero-main {
+    font-size: 30px;
+  }
+  .reference-caption-bar {
+    padding: 10px 14px;
+  }
+}

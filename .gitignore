@@ -1,0 +1,6 @@
+# .gitignore for Taipei 101 3D
+.DS_Store
+*.log
+__pycache__/
+.vscode/
+.idea/

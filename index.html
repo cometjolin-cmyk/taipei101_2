@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TAIPEI 101 - 台北 101 3D 建築互動展示</title>
+  
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/hud.css">
+
+  <!-- W3C Standard Import Map for Modern ESM Architecture -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+      "gsap": "https://esm.sh/gsap@3.12.5"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas Layer -->
+  <div id="canvas-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- 3D Interactive Floating Hotspot '+' Pins Layer -->
+  <div id="hotspots-layer">
+    <div class="hotspot-pin" id="pin-spire" title="導覽：塔冠與塔尖">
+      <div class="pin-ring"></div>
+      <div class="pin-core">+</div>
+      <div class="pin-label">
+        <span class="pin-title">89F 觀景台 & 塔尖</span>
+        <span class="pin-desc">508m 避雷針與塔冠觀景</span>
+      </div>
+    </div>
+    <div class="hotspot-pin" id="pin-pagoda" title="導覽：竹節斗型塔身">
+      <div class="pin-ring"></div>
+      <div class="pin-core">+</div>
+      <div class="pin-label">
+        <span class="pin-title">88F-92F 風阻尼球</span>
+        <span class="pin-desc">660t TMD 抗風防震核心</span>
+      </div>
+    </div>
+    <div class="hotspot-pin" id="pin-podium" title="導覽：基座裙樓商場">
+      <div class="pin-ring"></div>
+      <div class="pin-core">+</div>
+      <div class="pin-label">
+        <span class="pin-title">1F-5F 裙樓購物中心</span>
+        <span class="pin-desc">採光穹頂與極速電梯起點</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- UI Layer Overlay -->
+  <div id="ui-layer">
+    
+    <!-- Top-Left Hero Header (Exact Reference Match & Sci-Fi HUD Upgrade) -->
+    <div class="hero-header interactive-panel">
+      <div class="hero-status-row">
+        <span class="status-pulse-dot"></span>
+        <span class="hero-sub">TAIPEI 101 REALTIME 3D</span>
+      </div>
+      <div class="hero-main">台北 101</div>
+
+      <div class="metrics-row">
+        <div class="metric-item">
+          <span class="metric-label">高度</span>
+          <span class="metric-value">508<span class="metric-unit">m</span></span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-label">樓層</span>
+          <span class="metric-value">101<span class="metric-unit">F</span></span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-label">阻尼器</span>
+          <span class="metric-value">660<span class="metric-unit">t</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top-Right Utilities Bar -->
+    <div class="top-bar-right interactive-panel">
+      <button id="btn-audio-toggle" class="util-btn" title="切換空間音效">
+        <span id="audio-icon">🔇</span>
+        <span id="audio-label">音效</span>
+      </button>
+      <div class="util-btn">
+        <span id="fps-display" style="font-family:var(--font-mono); color:#34d399; font-weight:700;">60 FPS</span>
+      </div>
+      <button id="btn-reset-view" class="util-btn" title="重設鳥瞰全景視角">
+        <span>🔄 重設視角</span>
+      </button>
+    </div>
+
+    <!-- Bottom Controls & Caption Container (Exact Reference Match) -->
+    <div class="bottom-container">
+      
+      <!-- Expandable Advanced Control Dock (Superpowers) -->
+      <div class="control-dock-wrap interactive-panel" id="control-dock-wrap">
+        <div class="control-dock">
+          
+          <!-- Section 1: Time of Day Scrubber -->
+          <div class="dock-section">
+            <div class="section-label">
+              <span>時段與日照</span>
+              <span class="time-readout" id="time-readout">14:00</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <div class="button-group">
+                <button class="dock-btn" data-time="6.5">🌅 清晨</button>
+                <button class="dock-btn active" data-time="12.0">☀️ 正午</button>
+                <button class="dock-btn" data-time="17.8">🌇 夕陽</button>
+                <button class="dock-btn" data-time="19.2">🌃 藍調</button>
+                <button class="dock-btn" data-time="22.0">🌌 深夜</button>
+              </div>
+              <div class="time-slider-wrap">
+                <input type="range" id="time-slider" class="time-slider" min="0" max="24" step="0.1" value="12.0">
+              </div>
+            </div>
+          </div>
+
+          <div class="dock-divider"></div>
+
+          <!-- Section 2: Weather System -->
+          <div class="dock-section">
+            <div class="section-label">天氣系統</div>
+            <div class="button-group" id="weather-group">
+              <button class="dock-btn active" data-weather="clear">☀️ 晴朗</button>
+              <button class="dock-btn" data-weather="fog">🌫️ 薄霧</button>
+              <button class="dock-btn" data-weather="rain">🌧️ 微雨</button>
+            </div>
+          </div>
+
+          <div class="dock-divider"></div>
+
+          <!-- Section 3: Weekday 7-Color Tower Lighting -->
+          <div class="dock-section">
+            <div class="section-label">周間七彩燈眉</div>
+            <div class="weekday-dots" id="weekday-lights">
+              <button class="color-dot-btn" style="background:#ef4444;" data-color="#ef4444" title="週一：紅光"></button>
+              <button class="color-dot-btn" style="background:#f97316;" data-color="#f97316" title="週二：橙光"></button>
+              <button class="color-dot-btn" style="background:#eab308;" data-color="#eab308" title="週三：黃光"></button>
+              <button class="color-dot-btn" style="background:#22c55e;" data-color="#22c55e" title="週四：綠光"></button>
+              <button class="color-dot-btn active" style="background:#3b82f6;" data-color="#3b82f6" title="週五：藍光"></button>
+              <button class="color-dot-btn" style="background:#6366f1;" data-color="#6366f1" title="週六：靛光"></button>
+              <button class="color-dot-btn" style="background:#a855f7;" data-color="#a855f7" title="週日：紫光"></button>
+              <button class="color-dot-btn" style="background:linear-gradient(135deg, #f43f5e, #38bdf8);" data-color="rainbow" title="節慶彩虹"></button>
+            </div>
+          </div>
+
+          <div class="dock-divider"></div>
+
+          <!-- Section 4: Advanced Interactive Experiences -->
+          <div class="dock-section">
+            <div class="section-label">進階體驗模式</div>
+            <div style="display: flex; gap: 8px;">
+              <button class="action-btn" id="btn-elevator" title="體驗 1010 m/min 超高速登頂">
+                <span>🚀 極速電梯</span>
+              </button>
+              <button class="action-btn" id="btn-damper" title="88F-92F 阻尼器 X 光透視與物理模擬">
+                <span>⚙️ 阻尼器透視</span>
+              </button>
+              <button class="action-btn" id="btn-fireworks" title="觸發 10 秒跨年多階煙火秀">
+                <span>🎆 跨年煙火</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Reference Live Caption Banner with [展開] Button (Exact Screenshot Match!) -->
+      <div class="reference-caption-bar interactive-panel">
+        <div class="caption-message" id="caption-text">
+          互動導覽：塔冠與塔尖。可拖曳換角度，點其他部位或「+」繼續導覽。
+        </div>
+        <button class="btn-expand-toggle" id="btn-expand-toggle">展開</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Ultra-High-Speed Elevator Cockpit HUD -->
+  <div id="elevator-hud">
+    <div class="elevator-cockpit-frame">
+      <div class="elevator-header">
+        <span class="elevator-title">TOSHIBA HIGH-SPEED ELEVATOR</span>
+        <span class="elevator-direction">▲ ASCENDING</span>
+      </div>
+      
+      <div class="elevator-main-telemetry">
+        <div class="telemetry-cell">
+          <div class="cell-label">目前樓層</div>
+          <div class="cell-val-lg" id="elev-floor">1<span class="cell-val-unit">F</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="cell-label">即時速度</div>
+          <div class="cell-val-lg" id="elev-speed">0<span class="cell-val-unit">m/min</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="cell-label">絕對高度</div>
+          <div class="cell-val-lg" id="elev-alt">0<span class="cell-val-unit">m</span></div>
+        </div>
+      </div>
+
+      <div class="speed-bar-container">
+        <div class="speed-bar-header">
+          <span>0 m/min</span>
+          <span style="color: #f59e0b; font-weight: 700;">MAX 1,010 m/min (60.6 km/h)</span>
+        </div>
+        <div class="speed-progress-track">
+          <div class="speed-progress-fill" id="elev-progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="elevator-footer-note">
+        氣壓調節系統運作中 • 1F 直達 89F 觀景台僅需 37 秒
+      </div>
+    </div>
+  </div>
+
+  <!-- Tuned Mass Damper (TMD) Physics Telemetry HUD -->
+  <div id="damper-hud">
+    <div class="damper-panel">
+      <div class="damper-header">
+        <span class="damper-title">TMD 阻尼器結構物理監控</span>
+        <button id="btn-damper-close" style="background:none; border:none; color:#94a3b8; font-size:16px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="damper-specs-row">
+        <div class="damper-spec-item">
+          <div class="damper-spec-label">鋼球直徑</div>
+          <div class="damper-spec-val">5.5 <span>m</span></div>
+        </div>
+        <div class="damper-spec-item">
+          <div class="damper-spec-label">總質量</div>
+          <div class="damper-spec-val">660 <span>公噸</span></div>
+        </div>
+        <div class="damper-spec-item">
+          <div class="damper-spec-label">懸吊鋼索</div>
+          <div class="damper-spec-val">8 <span>束鋼纜</span></div>
+        </div>
+        <div class="damper-spec-item">
+          <div class="damper-spec-label">環形油壓活塞</div>
+          <div class="damper-spec-val">8 <span>支阻尼活塞</span></div>
+        </div>
+      </div>
+
+      <!-- Real-time Oscilloscope Canvas -->
+      <div class="oscilloscope-box">
+        <canvas id="damper-canvas" width="280" height="80"></canvas>
+        <div class="damper-legend">
+          <div class="legend-item"><span class="legend-color-tower"></span> 塔身位移</div>
+          <div class="legend-item"><span class="legend-color-ball"></span> 阻尼球反相</div>
+        </div>
+      </div>
+
+      <!-- Mode Selection -->
+      <div class="damper-control-group">
+        <div class="control-label-row">
+          <span>激勵外力模式</span>
+        </div>
+        <div class="button-group">
+          <button class="dock-btn active" id="btn-damper-wind">強風諧振 (低頻)</button>
+          <button class="dock-btn" id="btn-damper-quake">強震位移 (高頻)</button>
+        </div>
+      </div>
+
+      <!-- Intensity Slider -->
+      <div class="damper-control-group">
+        <div class="control-label-row">
+          <span>擾動強度 (風力/地震規模)</span>
+          <span id="damper-intensity-val" style="color:#fbbf24; font-family:var(--font-mono);">等級 4</span>
+        </div>
+        <input type="range" id="damper-intensity-slider" class="damper-slider" min="1" max="10" step="1" value="4">
+      </div>
+
+      <div class="damper-disclaimer">
+        ※ 註：阻尼球與塔身反相位擺動幅度已在視覺上放大 8 倍示意，用以精準科普 2-DOF 結構力學減震原理。
+      </div>
+    </div>
+  </div>
+
+  <!-- Fireworks Countdown Overlay -->
+  <div id="countdown-overlay">
+    <div class="countdown-number" id="countdown-number">10</div>
+    <div class="countdown-sub">TAIPEI 101 COUNTDOWN</div>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
